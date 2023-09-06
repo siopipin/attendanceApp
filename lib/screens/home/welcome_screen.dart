@@ -30,7 +30,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       val = val;
     });
 
-    var value = val;
+    // "0314008171"
+    var value = int.parse(val);
     String hex = value.toRadixString(16).padLeft(8, "0");
 
     List<String> hexChunks = [];
@@ -46,11 +47,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     print('Reversed Hex: $reversedHex');
 
-    navigateToCamera(reversedHex);
+    navigateToCamera(reversedHex.toUpperCase());
   }
 
   navigateToCamera(convertedHex) {
-    return Navigator.push(
+    return Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (context) => HomeScreen(
@@ -110,7 +111,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      "\nVersion 1.1",
+                      "\nVersion 1.2",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontWeight: FontWeight.w100),
                     ),

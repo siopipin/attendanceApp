@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future initCamera() async {
     _cameraController =
-        CameraController(widget.cameras![1], ResolutionPreset.high);
+        CameraController(widget.cameras![1], ResolutionPreset.medium);
     try {
       await _cameraController.initialize().then((_) async {
         if (!mounted) return;
@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
         //capture kamera
         await takePicture();
 
-        Future.delayed(const Duration(milliseconds: 1500),
+        Future.delayed(const Duration(milliseconds: 1200),
             () async => await postAttendance(widget.nokartu));
       });
     } on CameraException catch (e) {
@@ -73,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future postAttendance(nokartu) async {
     final provider = context.read<AttendanceProvider>();
-    int result = await context
+    List result = await context
         .read<AttendanceProvider>()
         .apiPostAttendance(no_kartu: nokartu, capture: picture!.path);
 
@@ -92,7 +92,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => MessagePage(status: status),
+            builder: (context) => MessagePage(
+                  status: status,
+                ),
             fullscreenDialog: true));
   }
 
@@ -101,70 +103,59 @@ class _HomeScreenState extends State<HomeScreen> {
     final provider = context.watch<AttendanceProvider>();
 
     return Scaffold(
+        backgroundColor: Colors.black,
         body: SafeArea(
-      child: Stack(children: [
-        Align(
-          alignment: Alignment.topLeft,
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Text(
-              "Welcome,",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          child: Stack(children: [
+            Align(
+              child: (_cameraController.value.isInitialized)
+                  ? CameraPreview(_cameraController)
+                  : Container(
+                      color: Colors.black,
+                      child: const Center(child: CircularProgressIndicator())),
             ),
-          ),
-        ),
-        (_cameraController.value.isInitialized)
-            ? Container(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
-                child: CameraPreview(_cameraController),
-              )
-            : Container(
-                color: Colors.black,
-                child: const Center(child: CircularProgressIndicator())),
-        Align(
-          alignment: Alignment.topRight,
-          child: picture == null
-              ? Container(
-                  width: 100,
-                  height: 145,
-                  decoration: BoxDecoration(
-                      color: Colors.grey,
-                      borderRadius: BorderRadius.circular(20)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.person_outline_sharp,
-                        size: 50,
+            Align(
+              alignment: Alignment.topRight,
+              child: picture == null
+                  ? Container(
+                      width: 100,
+                      height: 145,
+                      decoration: BoxDecoration(
+                          color: Colors.grey,
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.person_outline_sharp,
+                            size: 50,
+                          ),
+                          Text(
+                            "Photo result",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 10,
+                            ),
+                          )
+                        ],
                       ),
-                      Text(
-                        "Photo result",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 10,
-                        ),
-                      )
-                    ],
-                  ),
-                )
-              : Container(
-                  margin: EdgeInsets.only(right: 20, top: 20),
-                  width: 100,
-                  height: 145,
-                  decoration: BoxDecoration(
-                      color: Colors.grey,
-                      borderRadius: BorderRadius.circular(10)),
-                  child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10.0),
-                      child: Image.file(
-                        File(picture!.path),
-                        fit: BoxFit.cover,
-                      )),
-                ),
-        ),
-      ]),
-    ));
+                    )
+                  : Container(
+                      margin: EdgeInsets.only(right: 20, top: 20),
+                      width: 100,
+                      height: 145,
+                      decoration: BoxDecoration(
+                          color: Colors.grey,
+                          borderRadius: BorderRadius.circular(10)),
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10.0),
+                          child: Image.file(
+                            File(picture!.path),
+                            fit: BoxFit.cover,
+                          )),
+                    ),
+            ),
+          ]),
+        ));
   }
 }

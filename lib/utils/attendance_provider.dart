@@ -37,11 +37,11 @@ class AttendanceProvider with ChangeNotifier {
   }
 
   // API action
-  Future<int> apiPostAttendance({
+  Future<List> apiPostAttendance({
     required String no_kartu,
     required String capture,
   }) async {
-    int result = 0;
+    List result = [];
     var url = Uri.parse(Config().baseURL + 'absensi_siswa');
     var request = http.MultipartRequest("POST", url);
     request.fields['no_kartu'] = no_kartu;
@@ -52,13 +52,11 @@ class AttendanceProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         setStatePage = StatePage.loaded;
         setKartuTerdeteksi = false;
-        Fluttertoast.showToast(
-            msg: "Berhasil terkirim!", gravity: ToastGravity.TOP);
 
         var data = json.decode(await response.stream.bytesToString());
-        result = data['statuscode'];
+        result = [data['statuscode'], data['message']];
       } else {
-        result = 0;
+        result = [0, "-"];
       }
     });
     return result;
