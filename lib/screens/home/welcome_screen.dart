@@ -1,12 +1,15 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:presensi_app/screens/home/home_screen.dart';
+import 'package:presensi_app/utils/attendance_provider.dart';
+import 'package:provider/provider.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  final List<CameraDescription>? cameras;
+  final List<CameraDescription> cameras;
   const WelcomeScreen({
     super.key,
-    this.cameras,
+    required this.cameras,
   });
 
   @override
@@ -14,24 +17,22 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  TextEditingController ctrl = TextEditingController();
-  var val;
+  String? value;
   List<CameraDescription>? cameras;
   @override
   void initState() {
-    ctrl = TextEditingController(text: " ");
-    val = "";
     super.initState();
   }
 
-  setValue(val) {
-    setState(() {
-      ctrl = TextEditingController(text: val);
-      val = val;
-    });
+  setValue(val) async {
+    final player = AudioPlayer();
+    await player.play(AssetSource('audios/ping.mp3'));
+
+    var provider = context.read<AttendanceProvider>();
+    provider.setNoKartu = val;
 
     // "0314008171"
-    var value = int.parse(val);
+    var value = int.parse(provider.noKartu);
     String hex = value.toRadixString(16).padLeft(8, "0");
 
     List<String> hexChunks = [];
@@ -57,12 +58,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             builder: (context) => HomeScreen(
                   nokartu: convertedHex,
                   cameras: widget.cameras,
-                ),
-            fullscreenDialog: true));
+                )));
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AttendanceProvider>();
     return Scaffold(
         appBar: AppBar(
           title: const Text('Attendance App'),
@@ -111,7 +112,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      "\nVersion 1.2",
+                      "\nVersion 1.0",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontWeight: FontWeight.w100),
                     ),
@@ -119,9 +120,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 )),
 
             TextField(
+              controller: provider.ctrl,
               autofocus: true,
-              onChanged: (val) {
-                setValue(val);
+              onChanged: (val) async {
+                if (val.length >= 10) {
+                  setValue(val);
+                }
               },
               decoration: const InputDecoration(border: InputBorder.none),
             ),

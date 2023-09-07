@@ -13,6 +13,24 @@ class AttendanceProvider with ChangeNotifier {
     setKartuTerdeteksi = false;
     setStatePage = StatePage.initial;
     setResultData = "Tidak ada kartu yang terdeteksi";
+    setText = "";
+
+    //kartu
+    setNoKartu = "";
+    ctrl.clear();
+  }
+
+  String? _noKartu = "";
+  String get noKartu => _noKartu!;
+  set setNoKartu(val) {
+    _noKartu = val;
+    notifyListeners();
+  }
+
+  TextEditingController ctrl = TextEditingController();
+  set setText(val) {
+    ctrl = TextEditingController(text: val);
+    notifyListeners();
   }
 
   String _resultData = "Tidak ada kartu yang terdeteksi";
@@ -58,6 +76,7 @@ class AttendanceProvider with ChangeNotifier {
       } else {
         result = [0, "-"];
       }
+      ctrl.clear();
     });
     return result;
   }

@@ -3,8 +3,8 @@ import 'package:presensi_app/main.dart';
 
 class MessagePage extends StatefulWidget {
   final List status;
-  // final String nokartu;
-  const MessagePage({super.key, required this.status});
+  final String nokartu;
+  const MessagePage({super.key, required this.status, required this.nokartu});
 
   @override
   State<MessagePage> createState() => _MessagePageState();
@@ -19,7 +19,7 @@ class _MessagePageState extends State<MessagePage> {
 
   timer() {
     Future.delayed(
-        const Duration(milliseconds: 2500),
+        const Duration(seconds: 1),
         () => Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const MyApp()),
@@ -53,6 +53,7 @@ class _MessagePageState extends State<MessagePage> {
             const SizedBox(height: 30),
             Text(
               widget.status[1],
+              textAlign: TextAlign.center,
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
             ),
             SizedBox(height: 20),

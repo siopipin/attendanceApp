@@ -7,10 +7,13 @@ import 'package:presensi_app/utils/attendance_provider.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
-  final List<CameraDescription>? cameras;
-
+  final List<CameraDescription> cameras;
   final String nokartu;
-  const HomeScreen({super.key, required this.nokartu, required this.cameras});
+  const HomeScreen({
+    super.key,
+    required this.nokartu,
+    required this.cameras,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -24,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+
     initCamera();
   }
 
@@ -35,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future initCamera() async {
     _cameraController =
-        CameraController(widget.cameras![1], ResolutionPreset.medium);
+        CameraController(widget.cameras[1], ResolutionPreset.medium);
     try {
       await _cameraController.initialize().then((_) async {
         if (!mounted) return;
@@ -43,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
         //capture kamera
         await takePicture();
 
-        Future.delayed(const Duration(milliseconds: 1200),
+        await Future.delayed(const Duration(seconds: 1),
             () async => await postAttendance(widget.nokartu));
       });
     } on CameraException catch (e) {
@@ -92,10 +96,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => MessagePage(
-                  status: status,
-                ),
-            fullscreenDialog: true));
+          builder: (context) => MessagePage(
+            status: status,
+            nokartu: widget.nokartu,
+          ),
+        ));
   }
 
   @override
