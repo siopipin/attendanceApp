@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:presensi_app/screens/home/home_screen.dart';
+import 'package:presensi_app/screens/home/widgets/time_widget.dart';
 import 'package:presensi_app/utils/attendance_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -19,8 +23,10 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   String? value;
   List<CameraDescription>? cameras;
+  FocusNode _focusNode = FocusNode();
   @override
   void initState() {
+    setTime();
     super.initState();
   }
 
@@ -61,6 +67,32 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 )));
   }
 
+  //Time
+  String? _timeString;
+  Timer? _timer;
+  setTime() {
+    _timeString = _formatDateTime(DateTime.now());
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) => _getTime());
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return DateFormat('hh:mm:ss').format(dateTime);
+  }
+
+  void _getTime() {
+    final DateTime now = DateTime.now();
+    final String formattedDateTime = _formatDateTime(now);
+    setState(() {
+      _timeString = formattedDateTime;
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AttendanceProvider>();
@@ -73,6 +105,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               bottom: Radius.circular(60),
             ),
           ),
+          backgroundColor: const Color(0xff01a89f),
           elevation: 0,
         ),
         body: ListView(
@@ -80,10 +113,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             const SizedBox(height: 50),
 
             //image
-            Image.asset('assets/images/tapcard.gif',
-                width: MediaQuery.of(context).size.width / 2 + 100),
+            Image.asset('assets/images/tap-img.gif',
+                width: MediaQuery.of(context).size.width / 2 + 200),
 
-            const SizedBox(height: 10),
+            // const SizedBox(height: 10),
 
             //text
             const Text(
@@ -96,7 +129,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
 
             // version
-            const SizedBox(height: 100),
+
+            const SizedBox(height: 50),
+            TimeWidget(timeString: _timeString!),
+            const SizedBox(height: 10),
 
             const Align(
                 alignment: Alignment.bottomCenter,
@@ -122,6 +158,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             TextField(
               controller: provider.ctrl,
               autofocus: true,
+              style: const TextStyle(color: Colors.white),
               onChanged: (val) async {
                 if (val.length >= 10) {
                   setValue(val);

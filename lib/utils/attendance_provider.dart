@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:presensi_app/utils/global_config.dart';
@@ -59,6 +58,7 @@ class AttendanceProvider with ChangeNotifier {
     required String no_kartu,
     required String capture,
   }) async {
+    setStatePage = StatePage.loading;
     List result = [];
     var url = Uri.parse(Config().baseURL + 'absensi_siswa');
     var request = http.MultipartRequest("POST", url);
@@ -68,13 +68,14 @@ class AttendanceProvider with ChangeNotifier {
     await request.send().then((response) async {
       print("Data: $no_kartu dan response= ${response.statusCode}");
       if (response.statusCode == 200) {
-        setStatePage = StatePage.loaded;
         setKartuTerdeteksi = false;
 
         var data = json.decode(await response.stream.bytesToString());
         result = [data['statuscode'], data['message']];
+        setStatePage = StatePage.loaded;
       } else {
         result = [0, "-"];
+        setStatePage = StatePage.error;
       }
       ctrl.clear();
     });

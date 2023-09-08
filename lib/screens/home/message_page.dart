@@ -1,5 +1,7 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:presensi_app/main.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 class MessagePage extends StatefulWidget {
   final List status;
@@ -13,13 +15,19 @@ class MessagePage extends StatefulWidget {
 class _MessagePageState extends State<MessagePage> {
   @override
   void initState() {
-    super.initState();
+    setNotif();
     timer();
+    super.initState();
+  }
+
+  setNotif() async {
+    final player = AudioPlayer();
+    await player.play(AssetSource('audios/beep-notif.mp3'));
   }
 
   timer() {
     Future.delayed(
-        const Duration(seconds: 1),
+        const Duration(seconds: 2),
         () => Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const MyApp()),
@@ -51,12 +59,15 @@ class _MessagePageState extends State<MessagePage> {
                                   : Icon(Icons.close),
             ),
             const SizedBox(height: 30),
-            Text(
-              widget.status[1],
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+            Html(
+              data: """
+                ${widget.status[1]}
+                """,
+              style: {
+                'html': Style(textAlign: TextAlign.center),
+              },
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
           ]),
     );
   }

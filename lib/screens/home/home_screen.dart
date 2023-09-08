@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:presensi_app/main.dart';
 import 'package:presensi_app/screens/home/message_page.dart';
 import 'package:presensi_app/utils/attendance_provider.dart';
 import 'package:provider/provider.dart';
@@ -46,9 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {});
         //capture kamera
         await takePicture();
-
-        await Future.delayed(const Duration(seconds: 1),
-            () async => await postAttendance(widget.nokartu));
       });
     } on CameraException catch (e) {
       debugPrint("camera error $e");
@@ -69,6 +68,9 @@ class _HomeScreenState extends State<HomeScreen> {
         picture = imgFile;
         print('Letak gambar: ${picture!.path}');
       });
+
+      await Future.delayed(const Duration(seconds: 1),
+          () async => await postAttendance(widget.nokartu));
     } on CameraException catch (e) {
       debugPrint('Error occured while taking picture: $e');
       return null;
@@ -77,19 +79,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future postAttendance(nokartu) async {
     final provider = context.read<AttendanceProvider>();
-    List result = await context
+    await context
         .read<AttendanceProvider>()
-        .apiPostAttendance(no_kartu: nokartu, capture: picture!.path);
+        .apiPostAttendance(no_kartu: nokartu, capture: picture!.path)
+        .then((value) async {
+      if (provider.statePage == StatePage.loaded) {
+        // TODOS update data
+        // provider.setResultData = "Tidak ada kartu yang terdeteksi";
+        provider.setKartuTerdeteksi = false;
 
-    // TODOS update data
-    // provider.setResultData = "Tidak ada kartu yang terdeteksi";
-    provider.setKartuTerdeteksi = false;
-
-    setState(() {
-      picture = null;
+        setState(() {
+          picture = null;
+        });
+        print("===== Response : $value");
+        navigateToMessagePage(value);
+      } else {
+        final player = AudioPlayer();
+        await player.play(AssetSource('audios/wrong.mp3'));
+        navigateToMyApp();
+      }
     });
-    print("===== Response : $result");
-    navigateToMessagePage(result);
+  }
+
+  navigateToMyApp() {
+    return Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MyApp()),
+        (route) => false);
   }
 
   navigateToMessagePage(status) {
