@@ -58,27 +58,27 @@ class AttendanceProvider with ChangeNotifier {
     required String no_kartu,
     required String capture,
   }) async {
-    setStatePage = StatePage.loading;
     List result = [];
-    var url = Uri.parse(Config().baseURL + 'absensi_siswa');
-    var request = http.MultipartRequest("POST", url);
-    request.fields['no_kartu'] = no_kartu;
-    request.files.add(await http.MultipartFile.fromPath('capture', capture,
-        contentType: MediaType('image', 'jpeg')));
-    await request.send().then((response) async {
-      print("Data: $no_kartu dan response= ${response.statusCode}");
-      if (response.statusCode == 200) {
+    try {
+      setStatePage = StatePage.loading;
+      var url = Uri.parse('${Config().baseURL}absensi_siswa');
+      var request = http.MultipartRequest("POST", url);
+      request.fields['no_kartu'] = no_kartu;
+      request.files.add(await http.MultipartFile.fromPath('capture', capture,
+          contentType: MediaType('image', 'jpeg')));
+      await request.send().then((response) async {
+        print("Data: $no_kartu dan response= ${response.statusCode}");
         setKartuTerdeteksi = false;
-
         var data = json.decode(await response.stream.bytesToString());
         result = [data['statuscode'], data['message']];
         setStatePage = StatePage.loaded;
-      } else {
-        result = [0, "-"];
-        setStatePage = StatePage.error;
-      }
-      ctrl.clear();
-    });
+        ctrl.clear();
+      });
+    } catch (e) {
+      result = [0, "-"];
+      setStatePage = StatePage.error;
+    }
+
     return result;
   }
 }

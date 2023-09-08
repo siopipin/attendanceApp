@@ -5,8 +5,7 @@ import 'package:flutter_html/flutter_html.dart';
 
 class MessagePage extends StatefulWidget {
   final List status;
-  final String nokartu;
-  const MessagePage({super.key, required this.status, required this.nokartu});
+  const MessagePage({super.key, required this.status});
 
   @override
   State<MessagePage> createState() => _MessagePageState();
@@ -22,7 +21,7 @@ class _MessagePageState extends State<MessagePage> {
 
   setNotif() async {
     final player = AudioPlayer();
-    await player.play(AssetSource('audios/beep-notif.mp3'));
+    await player.play(AssetSource('audios/notif.wav'));
   }
 
   timer() {

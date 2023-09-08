@@ -1,13 +1,18 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:presensi_app/screens/home/home_screen.dart';
+import 'package:presensi_app/screens/home/message_page.dart';
 import 'package:presensi_app/screens/home/widgets/time_widget.dart';
 import 'package:presensi_app/utils/attendance_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:rxdart/rxdart.dart';
 
 class WelcomeScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -23,11 +28,27 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   String? value;
   List<CameraDescription>? cameras;
+
+  //handle onchangeTextfield
   FocusNode _focusNode = FocusNode();
+  StreamController<String> _streamController = StreamController<String>();
+
   @override
   void initState() {
+    setDebounceStream();
     setTime();
     super.initState();
+  }
+
+  setDebounceStream() {
+    var provider = context.read<AttendanceProvider>();
+    _streamController.stream
+        .debounceTime(Duration(milliseconds: 1000))
+        .listen((val) async {
+      await setValue(val);
+      provider.ctrl.clear(); // Bersihkan TextField setelah membaca kartu
+      _focusNode.requestFocus(); // Pindahkan fokus kembali ke TextField
+    });
   }
 
   setValue(val) async {
@@ -52,9 +73,38 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       reversedHex += hexChunks[i];
     }
 
-    print('Reversed Hex: $reversedHex');
+    // ambil dummy gambar (karena API POST butuh perlu gambar)
+    File imageFile = await getImageFileFromAssets();
+    await cekPresensi(reversedHex.toUpperCase(), imageFile.path).then(
+      (value) {
+        print(value);
+        if (value[0] == 1 || value[0] == 4) {
+          //jika respon statuscode 001 dan 004
+          navigateToCamera(reversedHex.toUpperCase());
+        } else {
+          navigateToMessagePage(value);
+        }
+      },
+    );
+  }
 
-    navigateToCamera(reversedHex.toUpperCase());
+  Future cekPresensi(nokartu, path) async {
+    final provider = context.read<AttendanceProvider>();
+    var values;
+    await context
+        .read<AttendanceProvider>()
+        .apiPostAttendance(no_kartu: nokartu, capture: path)
+        .then((value) async {
+      if (provider.statePage == StatePage.loaded) {
+        provider.setKartuTerdeteksi = false;
+        values = value;
+      } else {
+        final player = AudioPlayer();
+        await player.play(AssetSource('audios/wrong.mp3'));
+        values = value;
+      }
+    });
+    return values;
   }
 
   navigateToCamera(convertedHex) {
@@ -67,12 +117,30 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 )));
   }
 
+  navigateToMessagePage(status) {
+    return Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MessagePage(status: status),
+        ));
+  }
+
+  Future<File> getImageFileFromAssets() async {
+    final byteData = await rootBundle.load('assets/images/people.jpg');
+
+    final file = File('${(await getTemporaryDirectory()).path}/people.jpg');
+    await file.writeAsBytes(byteData.buffer
+        .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+
+    return file;
+  }
+
   //Time
   String? _timeString;
   Timer? _timer;
   setTime() {
     _timeString = _formatDateTime(DateTime.now());
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) => _getTime());
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) => _getTime());
   }
 
   String _formatDateTime(DateTime dateTime) {
@@ -90,6 +158,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _streamController.close();
+
     super.dispose();
   }
 
@@ -160,11 +230,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               autofocus: true,
               style: const TextStyle(color: Colors.white),
               onChanged: (val) async {
-                if (val.length >= 10) {
-                  setValue(val);
-                }
+                _streamController.add(val);
               },
               decoration: const InputDecoration(border: InputBorder.none),
+              focusNode: _focusNode,
+              readOnly: true,
             ),
           ],
         ));

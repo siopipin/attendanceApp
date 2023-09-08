@@ -29,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
     initCamera();
   }
 
@@ -46,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await _cameraController.initialize().then((_) async {
         if (!mounted) return;
         setState(() {});
+
         //capture kamera
         await takePicture();
       });
@@ -84,7 +84,6 @@ class _HomeScreenState extends State<HomeScreen> {
         .apiPostAttendance(no_kartu: nokartu, capture: picture!.path)
         .then((value) async {
       if (provider.statePage == StatePage.loaded) {
-        // TODOS update data
         // provider.setResultData = "Tidak ada kartu yang terdeteksi";
         provider.setKartuTerdeteksi = false;
 
@@ -114,7 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
         MaterialPageRoute(
           builder: (context) => MessagePage(
             status: status,
-            nokartu: widget.nokartu,
           ),
         ));
   }
