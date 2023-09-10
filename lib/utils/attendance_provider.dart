@@ -12,11 +12,10 @@ class AttendanceProvider with ChangeNotifier {
     setKartuTerdeteksi = false;
     setStatePage = StatePage.initial;
     setResultData = "Tidak ada kartu yang terdeteksi";
-    setText = "";
+    // setText = "";
 
     //kartu
     setNoKartu = "";
-    ctrl.clear();
   }
 
   String? _noKartu = "";
@@ -26,11 +25,11 @@ class AttendanceProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  TextEditingController ctrl = TextEditingController();
-  set setText(val) {
-    ctrl = TextEditingController(text: val);
-    notifyListeners();
-  }
+  // TextEditingController ctrl = TextEditingController();
+  // set setText(val) {
+  //   ctrl = TextEditingController(text: val);
+  //   notifyListeners();
+  // }
 
   String _resultData = "Tidak ada kartu yang terdeteksi";
   String get resultData => _resultData;
@@ -72,7 +71,7 @@ class AttendanceProvider with ChangeNotifier {
         var data = json.decode(await response.stream.bytesToString());
         result = [data['statuscode'], data['message']];
         setStatePage = StatePage.loaded;
-        ctrl.clear();
+        // ctrl.clear();
       });
     } catch (e) {
       result = [0, "-"];

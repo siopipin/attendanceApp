@@ -55,7 +55,8 @@ class _MessagePageState extends State<MessagePage> {
                               : widget.status[0] == 5
                                   ? Image.asset('assets/images/cry.gif',
                                       width: 230)
-                                  : Icon(Icons.close),
+                                  : Image.asset('assets/images/alarm.gif',
+                                      width: 230),
             ),
             const SizedBox(height: 30),
             Html(

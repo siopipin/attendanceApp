@@ -5,10 +5,12 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:input_with_keyboard_control/input_with_keyboard_control.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:presensi_app/screens/home/home_screen.dart';
 import 'package:presensi_app/screens/home/message_page.dart';
+import 'package:presensi_app/screens/home/widgets/textfield_customer.dart';
 import 'package:presensi_app/screens/home/widgets/time_widget.dart';
 import 'package:presensi_app/utils/attendance_provider.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +30,7 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   String? value;
   List<CameraDescription>? cameras;
+  TextEditingController ctrl = TextEditingController();
 
   //handle onchangeTextfield
   FocusNode _focusNode = FocusNode();
@@ -35,18 +38,29 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   void initState() {
-    setDebounceStream();
+    // setDebounceStream();
     setTime();
+
+    //atudofocus
+    Future.delayed(Duration(seconds: 0), () {
+      _focusNode.requestFocus(); //auto focus on second text field.
+    });
     super.initState();
   }
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _streamController.close();
+
+    super.dispose();
+  }
+
   setDebounceStream() {
-    var provider = context.read<AttendanceProvider>();
     _streamController.stream
         .debounceTime(Duration(milliseconds: 1000))
         .listen((val) async {
       await setValue(val);
-      provider.ctrl.clear(); // Bersihkan TextField setelah membaca kartu
       _focusNode.requestFocus(); // Pindahkan fokus kembali ke TextField
     });
   }
@@ -81,11 +95,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         if (value[0] == 1 || value[0] == 4) {
           //jika respon statuscode 001 dan 004
           navigateToCamera(reversedHex.toUpperCase());
+          ctrl.clear();
         } else {
           navigateToMessagePage(value);
+          ctrl.clear();
         }
       },
     );
+    ctrl.clear();
   }
 
   Future cekPresensi(nokartu, path) async {
@@ -156,19 +173,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    _streamController.close();
-
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AttendanceProvider>();
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Attendance App'),
+          title: const Text('Neos Tap Box'),
           centerTitle: true,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(
@@ -183,10 +191,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             const SizedBox(height: 50),
 
             //image
-            Image.asset('assets/images/tap-img.gif',
-                width: MediaQuery.of(context).size.width / 2 + 200),
-
-            // const SizedBox(height: 10),
+            Container(
+              child: Image.asset(
+                'assets/images/iconhome.png',
+              ),
+              margin: EdgeInsets.symmetric(horizontal: 60),
+            ),
+            const SizedBox(height: 50),
 
             //text
             const Text(
@@ -202,7 +213,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
             const SizedBox(height: 50),
             TimeWidget(timeString: _timeString!),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
 
             const Align(
                 alignment: Alignment.bottomCenter,
@@ -226,15 +237,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 )),
 
             TextField(
-              controller: provider.ctrl,
-              autofocus: true,
+              // autofocus: true,
+              focusNode: _focusNode,
+              controller: ctrl,
               style: const TextStyle(color: Colors.white),
               onChanged: (val) async {
-                _streamController.add(val);
+                // _streamController.add(val);
+                if (val.length >= 10) {
+                  setValue(val);
+                }
               },
               decoration: const InputDecoration(border: InputBorder.none),
-              focusNode: _focusNode,
-              readOnly: true,
+              cursorColor: Colors.white,
+              // readOnly: true,
             ),
           ],
         ));

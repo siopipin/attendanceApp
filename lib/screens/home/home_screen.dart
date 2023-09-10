@@ -119,8 +119,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AttendanceProvider>();
-
     return Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
@@ -141,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                           color: Colors.grey,
                           borderRadius: BorderRadius.circular(20)),
-                      child: Column(
+                      child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
