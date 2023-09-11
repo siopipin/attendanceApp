@@ -73,6 +73,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     provider.setNoKartu = val;
 
     // "0314008171"
+
+    //TODO ganti ke provider.noKartu
     var value = int.parse(provider.noKartu);
     String hex = value.toRadixString(16).padLeft(8, "0");
 
@@ -91,9 +93,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     File imageFile = await getImageFileFromAssets();
     await cekPresensi(reversedHex.toUpperCase(), imageFile.path).then(
       (value) {
-        print(value);
+        //jika respon statuscode 001 dan 004
         if (value[0] == 1 || value[0] == 4) {
-          //jika respon statuscode 001 dan 004
           navigateToCamera(reversedHex.toUpperCase());
           ctrl.clear();
         } else {
@@ -110,7 +111,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     var values;
     await context
         .read<AttendanceProvider>()
-        .apiPostAttendance(no_kartu: nokartu, capture: path)
+        .apiCekAttendance(no_kartu: nokartu)
         .then((value) async {
       if (provider.statePage == StatePage.loaded) {
         provider.setKartuTerdeteksi = false;
@@ -211,7 +212,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
             // version
 
-            const SizedBox(height: 50),
+            SizedBox(height: MediaQuery.of(context).size.height / 2 - 250),
             TimeWidget(timeString: _timeString!),
             const SizedBox(height: 20),
 

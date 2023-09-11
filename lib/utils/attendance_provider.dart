@@ -57,6 +57,7 @@ class AttendanceProvider with ChangeNotifier {
     required String no_kartu,
     required String capture,
   }) async {
+    print('data kirim ke api: $no_kartu dan $capture');
     List result = [];
     try {
       setStatePage = StatePage.loading;
@@ -65,6 +66,31 @@ class AttendanceProvider with ChangeNotifier {
       request.fields['no_kartu'] = no_kartu;
       request.files.add(await http.MultipartFile.fromPath('capture', capture,
           contentType: MediaType('image', 'jpeg')));
+      await request.send().then((response) async {
+        print("Data: $no_kartu dan response= ${response.statusCode}");
+        setKartuTerdeteksi = false;
+        var data = json.decode(await response.stream.bytesToString());
+        result = [data['statuscode'], data['message']];
+        setStatePage = StatePage.loaded;
+        // ctrl.clear();
+      });
+    } catch (e) {
+      result = [0, "-"];
+      setStatePage = StatePage.error;
+    }
+
+    return result;
+  }
+
+  // API action
+  Future<List> apiCekAttendance({required String no_kartu}) async {
+    print('====== data kirim ke api: $no_kartu');
+    List result = [];
+    try {
+      setStatePage = StatePage.loading;
+      var url = Uri.parse('${Config().baseURL}check_absensi');
+      var request = http.MultipartRequest("POST", url);
+      request.fields['no_kartu'] = no_kartu;
       await request.send().then((response) async {
         print("Data: $no_kartu dan response= ${response.statusCode}");
         setKartuTerdeteksi = false;
