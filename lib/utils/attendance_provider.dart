@@ -95,12 +95,12 @@ class AttendanceProvider with ChangeNotifier {
         print("Data: $no_kartu dan response= ${response.statusCode}");
         setKartuTerdeteksi = false;
         var data = json.decode(await response.stream.bytesToString());
-        result = [data['statuscode'], data['message']];
+        result = [data['statuscode'], data['message'], response.statusCode];
         setStatePage = StatePage.loaded;
         // ctrl.clear();
       });
     } catch (e) {
-      result = [0, "-"];
+      result = [0, "-", 500];
       setStatePage = StatePage.error;
     }
 

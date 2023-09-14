@@ -45,6 +45,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     Future.delayed(Duration(seconds: 0), () {
       _focusNode.requestFocus(); //auto focus on second text field.
     });
+
     super.initState();
   }
 
@@ -73,8 +74,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     provider.setNoKartu = val;
 
     // "0314008171"
-
-    //TODO ganti ke provider.noKartu
+    //x TODO ganti ke provider.noKartu
     var value = int.parse(provider.noKartu);
     String hex = value.toRadixString(16).padLeft(8, "0");
 
@@ -93,8 +93,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     File imageFile = await getImageFileFromAssets();
     await cekPresensi(reversedHex.toUpperCase(), imageFile.path).then(
       (value) {
-        //jika respon statuscode 001 dan 004
-        if (value[0] == 1 || value[0] == 4) {
+        if (value == null) {
+          return null;
+        } else if (value[0] == 1 || value[0] == 4) {
+          //jika respon statuscode 001 dan 004
           navigateToCamera(reversedHex.toUpperCase());
           ctrl.clear();
         } else {
@@ -113,16 +115,56 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         .read<AttendanceProvider>()
         .apiCekAttendance(no_kartu: nokartu)
         .then((value) async {
+      print('Hasil cek presensi: $value');
       if (provider.statePage == StatePage.loaded) {
-        provider.setKartuTerdeteksi = false;
-        values = value;
+        if (value[2] == 200) {
+          provider.setKartuTerdeteksi = false;
+          values = value;
+        } else {
+          final player = AudioPlayer();
+          await player.play(AssetSource('audios/wrong.mp3'));
+
+          print("ada error-2");
+          //munculkan popup error.
+          await _showDialogAlert();
+          // return null;
+        }
       } else {
         final player = AudioPlayer();
         await player.play(AssetSource('audios/wrong.mp3'));
+        print("ada error");
+        //munculkan popup error.
+        await _showDialogAlert();
         values = value;
       }
     });
     return values;
+  }
+
+  Future<void> _showDialogAlert() async {
+    return showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          _timer = Timer(Duration(seconds: 2), () {
+            Navigator.of(context).pop();
+          });
+          return AlertDialog(
+            title: const Text(
+              'Connection Error',
+              textAlign: TextAlign.center,
+            ),
+            content: SizedBox(
+              height: 150,
+              child: Center(
+                child: Image.asset('assets/images/alarm.gif', width: 230),
+              ),
+            ),
+          );
+        }).then((value) {
+      if (_timer!.isActive) {
+        _timer!.cancel();
+      }
+    });
   }
 
   navigateToCamera(convertedHex) {
@@ -200,6 +242,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
             const SizedBox(height: 50),
 
+            //xTODO: Hapus tombol test setValue
+            // ElevatedButton(
+            //     onPressed: () => setValue("val"), child: Text("HIT")),
+
             //text
             const Text(
               textAlign: TextAlign.center,
@@ -241,6 +287,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               // autofocus: true,
               focusNode: _focusNode,
               controller: ctrl,
+              maxLength: 10,
               style: const TextStyle(color: Colors.white),
               onChanged: (val) async {
                 // _streamController.add(val);
@@ -248,7 +295,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   setValue(val);
                 }
               },
-              decoration: const InputDecoration(border: InputBorder.none),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                counterText: "",
+              ),
               cursorColor: Colors.white,
               // readOnly: true,
             ),
