@@ -5,12 +5,10 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:input_with_keyboard_control/input_with_keyboard_control.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:presensi_app/screens/home/home_screen.dart';
 import 'package:presensi_app/screens/home/message_page.dart';
-import 'package:presensi_app/screens/home/widgets/textfield_customer.dart';
 import 'package:presensi_app/screens/home/widgets/time_widget.dart';
 import 'package:presensi_app/utils/attendance_provider.dart';
 import 'package:provider/provider.dart';
@@ -74,7 +72,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     provider.setNoKartu = val;
 
     // "0314008171"
-    //x TODO ganti ke provider.noKartu
+    //xTODO: ganti ke provider.noKartu
     var value = int.parse(provider.noKartu);
     String hex = value.toRadixString(16).padLeft(8, "0");
 
@@ -153,10 +151,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               'Connection Error',
               textAlign: TextAlign.center,
             ),
-            content: SizedBox(
+            content: Container(
+              color: Colors.transparent,
               height: 150,
               child: Center(
-                child: Image.asset('assets/images/alarm.gif', width: 230),
+                child: Image.asset(
+                  'assets/images/alarm.gif',
+                  width: 230,
+                ),
               ),
             ),
           );
@@ -298,7 +300,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               focusNode: _focusNode,
               controller: ctrl,
               maxLength: 10,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black),
               onChanged: (val) async {
                 // _streamController.add(val);
                 if (val.length >= 10) {
@@ -309,7 +311,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 border: InputBorder.none,
                 counterText: "",
               ),
-              cursorColor: Colors.white,
+              cursorColor: Colors.black,
               // readOnly: true,
             ),
           ],

@@ -26,6 +26,7 @@ class AttendanceProvider with ChangeNotifier {
 
   var dark = ThemeData(
     brightness: Brightness.dark,
+    scaffoldBackgroundColor: Colors.black,
     primarySwatch: Colors.teal,
   );
 
@@ -90,6 +91,7 @@ class AttendanceProvider with ChangeNotifier {
     List result = [];
     try {
       setStatePage = StatePage.loading;
+      //x TODO ganti url absensi dummy.
       var url = Uri.parse('${Config().baseURL}absensi_siswa');
       var request = http.MultipartRequest("POST", url);
       request.fields['no_kartu'] = no_kartu;

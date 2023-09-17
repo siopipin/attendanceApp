@@ -42,7 +42,7 @@ class _MessagePageState extends State<MessagePage> {
           children: [
             CircleAvatar(
               minRadius: 80,
-              backgroundColor: const Color.fromARGB(255, 240, 231, 242),
+              backgroundColor: Colors.transparent,
               child: widget.status[0] == 1
                   ? Image.asset('assets/images/verified.gif', width: 230)
                   : widget.status[0] == 2
