@@ -4,12 +4,14 @@ import 'package:presensi_app/screens/home/home_screen.dart';
 import 'package:presensi_app/screens/home/welcome_screen.dart';
 import 'package:presensi_app/utils/attendance_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 late List<CameraDescription> _camera;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _camera = await availableCameras();
+  WakelockPlus.enable();
 
   runApp(MultiProvider(
     providers: [
