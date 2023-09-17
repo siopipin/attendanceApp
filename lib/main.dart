@@ -40,15 +40,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AttendanceProvider>();
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        scaffoldBackgroundColor: Color(0xffFDFEFE),
-        primaryColor: Colors.blue,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.blue[800],
-        ),
-      ),
+      theme: provider.enableDarkMode ? provider.dark : provider.light,
       debugShowCheckedModeBanner: false,
       home: WelcomeScreen(cameras: _camera),
     );

@@ -18,6 +18,35 @@ class AttendanceProvider with ChangeNotifier {
     setNoKartu = "";
   }
 
+  //dark mode theme
+  var light = ThemeData(
+    brightness: Brightness.light,
+    primarySwatch: Colors.teal,
+  );
+
+  var dark = ThemeData(
+    brightness: Brightness.dark,
+    primarySwatch: Colors.teal,
+  );
+
+  bool _enableDarkMode = true;
+
+  bool get enableDarkMode => _enableDarkMode;
+
+  set setBrightness(nilai) {
+    _enableDarkMode = nilai;
+    notifyListeners();
+  }
+
+  bool _isActive = false;
+  bool get isActive => _isActive;
+  set setIsActive(val) {
+    _isActive = val;
+    notifyListeners();
+  }
+
+  // end dark mode theme
+
   String? _noKartu = "";
   String get noKartu => _noKartu!;
   set setNoKartu(val) {

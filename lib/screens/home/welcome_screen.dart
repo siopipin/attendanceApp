@@ -217,6 +217,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final prov = context.watch<AttendanceProvider>();
     return Scaffold(
         appBar: AppBar(
           title: const Text('Neos Tap Box'),
@@ -228,6 +229,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
           backgroundColor: const Color(0xff01a89f),
           elevation: 0,
+          // actions: [
+          //   Switch(
+          //       value: prov.enableDarkMode,
+          //       activeColor: Colors.green,
+          //       onChanged: (val) {
+          //         print(val);
+          //         prov.setBrightness = val;
+          //       })
+          // ],
         ),
         body: ListView(
           children: [
