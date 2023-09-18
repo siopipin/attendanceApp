@@ -40,7 +40,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     setTime();
 
     //atudofocus
-    Future.delayed(Duration(seconds: 0), () {
+    Future.delayed(const Duration(seconds: 0), () {
       _focusNode.requestFocus(); //auto focus on second text field.
     });
 

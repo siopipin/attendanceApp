@@ -92,7 +92,7 @@ class AttendanceProvider with ChangeNotifier {
     try {
       setStatePage = StatePage.loading;
       //x TODO ganti url absensi dummy.
-      var url = Uri.parse('${Config().baseURL}absensi_siswa');
+      var url = Uri.parse('${Config().baseURL}absensi');
       var request = http.MultipartRequest("POST", url);
       request.fields['no_kartu'] = no_kartu;
       request.files.add(await http.MultipartFile.fromPath('capture', capture,
