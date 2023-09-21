@@ -88,6 +88,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     }
 
     // ambil dummy gambar (karena API POST butuh perlu gambar)
+    print('hasil hexa ======== ${reversedHex}');
     File imageFile = await getImageFileFromAssets();
     await cekPresensi(reversedHex.toUpperCase(), imageFile.path).then(
       (value) {
