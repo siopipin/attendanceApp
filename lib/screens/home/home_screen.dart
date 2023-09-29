@@ -46,8 +46,11 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!mounted) return;
         setState(() {});
 
-        //capture kamera
-        await takePicture();
+        // Menunggu beberapa detik sebelum mengambil gambar,
+        // asumsi kamera akan fokus dalam waktu ini
+        Future.delayed(Duration(milliseconds: 500), () {
+          takePicture();
+        });
       });
     } on CameraException catch (e) {
       debugPrint("camera error $e");

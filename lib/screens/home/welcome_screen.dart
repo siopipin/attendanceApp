@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:nfc_manager/nfc_manager.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:presensi_app/screens/home/home_screen.dart';
 import 'package:presensi_app/screens/home/message_page.dart';
@@ -26,6 +29,10 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
+  bool? isLoading;
+  String? nfcData = "";
+  String? idKartu = "";
+  String? statusNfc = "";
   String? value;
   List<CameraDescription>? cameras;
   TextEditingController ctrl = TextEditingController();
@@ -37,13 +44,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     // setDebounceStream();
-    setTime();
 
     //atudofocus
-    Future.delayed(const Duration(seconds: 0), () {
-      _focusNode.requestFocus(); //auto focus on second text field.
-    });
+    // Future.delayed(const Duration(seconds: 0), () {
+    //   _focusNode.requestFocus(); //auto focus on second text field.
+    // });
+    isLoading = false;
 
+    checkNFC();
+    setTime();
     super.initState();
   }
 
@@ -51,8 +60,56 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void dispose() {
     _timer?.cancel();
     _streamController.close();
-
     super.dispose();
+  }
+
+  //Chech NFC
+  Future<void> checkNFC() async {
+    bool isAvailable = await NfcManager.instance.isAvailable();
+
+    print('status nfc $isAvailable');
+    setState(() {
+      statusNfc = isAvailable.toString();
+    });
+    if (isAvailable) {
+      // Start Session
+      NfcManager.instance.startSession(
+        onDiscovered: (NfcTag tag) async {
+          await getNFCTagValue(tag);
+        },
+      );
+    } else {
+      Fluttertoast.showToast(msg: "NFC tidak tersedia");
+    }
+  }
+
+  //Get NFCTag Value
+  Future<void> getNFCTagValue(NfcTag tag) async {
+    // Membaca ID kartu dari instance NfcTag
+
+    var nfcaData = tag.data['nfca'];
+    var identifier = nfcaData?['identifier'];
+
+    // var id = tag.data['id']; // ID dalam bentuk byte array
+
+    List<int> identifierDummy = [107, 98, 183, 18];
+
+    // xTODO=> ganti identifierDummy dengan identifier dari tag
+    String idString = identifier.map((e) => e.toString()).join();
+
+    setState(() {
+      nfcData = identifier.toString();
+      idKartu = idString;
+    });
+
+    print('Tag ID: $idString');
+
+    if (idString != null) {
+      await setValue(idString);
+    }
+
+    // Menghentikan sesi setelah membaca tagR
+    // NfcManager.instance.stopSession();
   }
 
   setDebounceStream() {
@@ -73,7 +130,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     // "0314008171"
     //xTODO: ganti ke provider.noKartu
-    var value = int.parse(provider.noKartu);
+    var value = int.parse(val);
     String hex = value.toRadixString(16).padLeft(8, "0");
 
     List<String> hexChunks = [];
@@ -90,8 +147,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     // ambil dummy gambar (karena API POST butuh perlu gambar)
     print('hasil hexa ======== ${reversedHex}');
     File imageFile = await getImageFileFromAssets();
+
+    setState(() {
+      isLoading = true;
+    });
     await cekPresensi(reversedHex.toUpperCase(), imageFile.path).then(
       (value) {
+        if (mounted) {
+          // Cek apakah State object masih ada di widget tree
+          setState(() {
+            isLoading = false;
+          });
+        }
         if (value == null) {
           return null;
         } else if (value[0] == 1 || value[0] == 4) {
@@ -181,11 +248,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   navigateToMessagePage(status) {
-    return Navigator.push(
+    if (mounted) {
+      return Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => MessagePage(status: status),
-        ));
+        ),
+      );
+    }
   }
 
   Future<File> getImageFileFromAssets() async {
@@ -242,79 +312,69 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           //       })
           // ],
         ),
-        body: ListView(
+        body: Stack(
           children: [
-            const SizedBox(height: 50),
+            ListView(
+              children: [
+                const SizedBox(height: 50),
 
-            //image
-            Container(
-              child: Image.asset(
-                'assets/images/iconhome.png',
-              ),
-              margin: EdgeInsets.symmetric(horizontal: 60),
+                //image
+                Container(
+                  child: Image.asset(
+                    'assets/images/iconhome.png',
+                  ),
+                  margin: EdgeInsets.symmetric(horizontal: 60),
+                ),
+                const SizedBox(height: 50),
+
+                //text
+                const Text(
+                  textAlign: TextAlign.center,
+                  "Tap Kartu Anda",
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                Text(nfcData ?? ""),
+                Text(idKartu ?? "-", style: TextStyle(color: Colors.red)),
+                Text("nfc data: ${nfcData ?? "-"}",
+                    style: TextStyle(color: Colors.blue)),
+                Text("status nfc: ${statusNfc ?? "-"}",
+                    style: TextStyle(color: Colors.blue)),
+
+                // version
+                SizedBox(height: MediaQuery.of(context).size.height / 2 - 250),
+                TimeWidget(timeString: _timeString!),
+                const SizedBox(height: 20),
+
+                const Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Column(
+                      children: [
+                        Text(
+                          "Powered By",
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          "NEOSCHOOL INDONESIA",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "\nVersion 1.0",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontWeight: FontWeight.w100),
+                        ),
+                      ],
+                    )),
+              ],
             ),
-            const SizedBox(height: 50),
-
-            //xTODO: Hapus tombol test setValue
-            // ElevatedButton(
-            //     onPressed: () => setValue("val"), child: Text("HIT")),
-
-            //text
-            const Text(
-              textAlign: TextAlign.center,
-              "Tap Kartu Anda",
-              style: TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
+            if (isLoading!) // variabel isLoading yang Anda definisikan sebelumnya
+              Center(
+                child: CircularProgressIndicator(),
               ),
-            ),
-
-            // version
-
-            SizedBox(height: MediaQuery.of(context).size.height / 2 - 250),
-            TimeWidget(timeString: _timeString!),
-            const SizedBox(height: 20),
-
-            const Align(
-                alignment: Alignment.bottomCenter,
-                child: Column(
-                  children: [
-                    Text(
-                      "Powered By",
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      "NEOSCHOOL INDONESIA",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      "\nVersion 1.0",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.w100),
-                    ),
-                  ],
-                )),
-
-            TextField(
-              // autofocus: true,
-              focusNode: _focusNode,
-              controller: ctrl,
-              maxLength: 10,
-              style: const TextStyle(color: Colors.black),
-              onChanged: (val) async {
-                // _streamController.add(val);
-                if (val.length >= 10) {
-                  setValue(val);
-                }
-              },
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                counterText: "",
-              ),
-              cursorColor: Colors.black,
-              // readOnly: true,
-            ),
           ],
         ));
   }

@@ -408,6 +408,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.1"
+  mifare_nfc_reader:
+    dependency: "direct main"
+    description:
+      name: mifare_nfc_reader
+      sha256: "3397a97b882a58fa3acbadbe06be5f65452990ee4e19ef96cba0d110f07c65e0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.9"
   nested:
     dependency: transitive
     description:
@@ -416,6 +424,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  nfc_manager:
+    dependency: "direct main"
+    description:
+      name: nfc_manager
+      sha256: d6a4cc6a8a37119b1e8cc242392c0c87623d319cf1423f6a90cb998a52970baf
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.0"
   package_info_plus:
     dependency: transitive
     description:

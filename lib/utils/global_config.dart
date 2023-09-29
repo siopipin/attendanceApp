@@ -29,7 +29,9 @@ class Config {
     );
   }
 
+  // TODO=> ganti ke url production
   final baseURL = "https://restapi.neoschool.id/api/";
+  // final baseURL = "https://dev.neoschool.id/api/";
 
   final paddingSize = 16.0;
   final radiusSize = 15.0;
