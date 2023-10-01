@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+// import 'dart:convert';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -8,8 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
-import 'package:nfc_manager/nfc_manager.dart';
+import 'package:mifare_nfc_reader/mifare_nfc_reader.dart';
+// import 'package:nfc_manager/nfc_manager.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:presensi_app/main.dart';
 import 'package:presensi_app/screens/home/home_screen.dart';
 import 'package:presensi_app/screens/home/message_page.dart';
 import 'package:presensi_app/screens/home/widgets/time_widget.dart';
@@ -29,6 +31,11 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
+  // ndefMessage
+  String _state = "No reader attached";
+  List<String> _ndefMessages = [];
+  String _uid = "";
+
   bool? isLoading;
   String? nfcData = "";
   String? idKartu = "";
@@ -51,7 +58,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     // });
     isLoading = false;
 
-    checkNFC();
+    // checkNFC();
+
+    methodChannel.setMethodCallHandler(onFlutterCall);
+    MifareNfcReader.init();
+
     setTime();
     super.initState();
   }
@@ -63,54 +74,99 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     super.dispose();
   }
 
+  Future<void> onFlutterCall(MethodCall call) async {
+    switch (call.method) {
+      case "onReceiveNdefMessages":
+        final List<dynamic> result = call.arguments;
+        setState(() {
+          _ndefMessages.addAll(result.map((e) => e.toString()).toList());
+        });
+        break;
+      case "onCardStateChanged":
+        if (call.arguments.toString().toLowerCase() == "present") {
+          setState(() {
+            _state = "The card is present";
+          });
+        } else {
+          resetOnDisconnectedOrMissingCard("The card is absent or unknown");
+        }
+        break;
+      case "onUsbDeviceStateChanged":
+        if (call.arguments.toString().toLowerCase() == "attached") {
+          setState(() {
+            _state = "The reader is attached";
+          });
+        } else {
+          resetOnDisconnectedOrMissingCard("The reader is detached");
+        }
+        break;
+      case "onReadCardError":
+        resetOnDisconnectedOrMissingCard(call.arguments.toString());
+        break;
+      case "onReadUID":
+        setState(() {
+          _uid = call.arguments.toString();
+        });
+        break;
+    }
+  }
+
+  void resetOnDisconnectedOrMissingCard(String state) {
+    setState(() {
+      _uid = "";
+      _ndefMessages.clear();
+      _state = state;
+    });
+  }
+
   //Chech NFC
-  Future<void> checkNFC() async {
-    bool isAvailable = await NfcManager.instance.isAvailable();
+  // Future<void> checkNFC() async {
+  //   bool isAvailable = await NfcManager.instance.isAvailable();
 
-    print('status nfc $isAvailable');
-    setState(() {
-      statusNfc = isAvailable.toString();
-    });
-    if (isAvailable) {
-      // Start Session
-      NfcManager.instance.startSession(
-        onDiscovered: (NfcTag tag) async {
-          await getNFCTagValue(tag);
-        },
-      );
-    } else {
-      Fluttertoast.showToast(msg: "NFC tidak tersedia");
-    }
-  }
+  //   print('status nfc $isAvailable');
+  //   setState(() {
+  //     statusNfc = isAvailable.toString();
+  //   });
+  //   if (isAvailable) {
+  //     // Start Session
+  //     NfcManager.instance.startSession(
+  //       onDiscovered: (NfcTag tag) async {
+  //         await getNFCTagValue(tag);
+  //       },
+  //     );
+  //   } else {
+  //     Fluttertoast.showToast(msg: "NFC tidak tersedia");
+  //   }
+  // }
 
-  //Get NFCTag Value
-  Future<void> getNFCTagValue(NfcTag tag) async {
-    // Membaca ID kartu dari instance NfcTag
+  // //Get NFCTag Value
+  // Future<void> getNFCTagValue(NfcTag tag) async {
+  //   // Membaca ID kartu dari instance NfcTag
 
-    var nfcaData = tag.data['nfca'];
-    var identifier = nfcaData?['identifier'];
+  //   var nfcaData = tag.data['nfca'];
+  //   var identifier = nfcaData?['identifier'];
 
-    // var id = tag.data['id']; // ID dalam bentuk byte array
+  //   // var id = tag.data['id']; // ID dalam bentuk byte array
 
-    List<int> identifierDummy = [107, 98, 183, 18];
+  //   List<int> identifierDummy = [107, 98, 183, 18];
 
-    // xTODO=> ganti identifierDummy dengan identifier dari tag
-    String idString = identifier.map((e) => e.toString()).join();
+  //   // xTODO=> ganti identifierDummy dengan identifier dari tag
+  //   String idString = identifier.map((e) => e.toString()).join();
 
-    setState(() {
-      nfcData = identifier.toString();
-      idKartu = idString;
-    });
+  //   setState(() {
+  //     nfcData = identifier.toString();
+  //     idKartu = idString;
+  //   });
 
-    print('Tag ID: $idString');
+  //   print('Tag ID: $idString');
 
-    if (idString != null) {
-      await setValue(idString);
-    }
+  //   if (idString != null) {
+  //     await setValue(idString);
+  //   }
 
-    // Menghentikan sesi setelah membaca tagR
-    // NfcManager.instance.stopSession();
-  }
+  //   // Menghentikan sesi setelah membaca tagR
+  //   // NfcManager.instance.stopSession();
+  // }
 
   setDebounceStream() {
     _streamController.stream
@@ -337,12 +393,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                 ),
 
-                Text(nfcData ?? ""),
-                Text(idKartu ?? "-", style: TextStyle(color: Colors.red)),
-                Text("nfc data: ${nfcData ?? "-"}",
+                // Text(nfcData ?? ""),
+                // Text(idKartu ?? "-", style: TextStyle(color: Colors.red)),
+                Text("nfc data: ${_ndefMessages ?? "-"}",
                     style: TextStyle(color: Colors.blue)),
-                Text("status nfc: ${statusNfc ?? "-"}",
-                    style: TextStyle(color: Colors.blue)),
+                // Text("status nfc: ${statusNfc ?? "-"}",
+                //     style: TextStyle(color: Colors.blue)),
 
                 // version
                 SizedBox(height: MediaQuery.of(context).size.height / 2 - 250),
